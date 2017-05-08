@@ -64,6 +64,7 @@ def reweighting(spring_const,mass,la,lattice_spacing,num_config,num_lat_points,m
     for g in range(num_bins):
         sum1=0
         sum2=0
+        sum3=0
         for j in range(bin_size):
             t1=c1p*ssps.delx2[j + g*bin_size]
             t2=c2p*ssps.x2[j + g*bin_size]
@@ -269,14 +270,72 @@ num_lat_points=int(sys.argv[2])
 lattice_spacing=float(sys.argv[3])
 corrt=int(sys.argv[4]) #### distance in fee calculation
 bootstraps=int(sys.argv[5])
-mass_prime=float(sys.argv[6])
-spring_const_prime=float(sys.argv[7])
-lap=float(sys.argv[8])
+mu_interval=float(sys.argv[6])
+mu_upp_lim=float(sys.argv[7])
+mu_low_lim=float(sys.argv[8])
 
-m=float(sys.argv[9])
-mu=float(sys.argv[10])
-la=float(sys.argv[11])
+m_interval=float(sys.argv[9])
+m_upp_lim=float(sys.argv[10])
+m_low_lim=float(sys.argv[11])
+
+la_interval=float(sys.argv[12])
+la_upp_lim=float(sys.argv[13])
+la_low_lim=float(sys.argv[14])
+
+m=float(sys.argv[15])
+mu=float(sys.argv[16])
+la=float(sys.argv[17])
+mass_prime=m
+spring_const_prime=mu
+lap=la
+
+mu_upi=int(mu_upp_lim/mu_interval) ####upper limit on iterations
+mu_loi=int(mu_low_lim/mu_interval)
+
+for d in range(mu_upi):
+    spring_const_prime=mu+(d+1)*mu_interval
+    
+    reweighting(mu,m,la,lattice_spacing,num_config,num_lat_points,mass_prime,spring_const_prime,lap,corrt,bootstraps)
+
+for d in range(mu_loi):
+    spring_const_prime=mu -(d+1)*mu_interval
+    
+    reweighting(mu,m,la,lattice_spacing,num_config,num_lat_points,mass_prime,spring_const_prime,lap,corrt,bootstraps)
+    
+m_upi=int(m_upp_lim/m_interval)
+m_loi=int(m_low_lim/m_interval)
+
+for d in range(m_upi):
+    mass_prime=m + (d+1)*m_interval
+    
+    reweighting(mu,m,la,lattice_spacing,num_config,num_lat_points,mass_prime,spring_const_prime,lap,corrt,bootstraps)
+
+for d in range(m_loi):
+    mass_prime=m - (d+1)*m_interval
+    
+    reweighting(mu,m,la,lattice_spacing,num_config,num_lat_points,mass_prime,spring_const_prime,lap,corrt,bootstraps)
+
+
+la_upi=int(la_upp_lim/la_interval)
+la_loi=int(la_low_lim/la_interval)
+
+for d in range(la_upi):
+    lap=la+(d+1)*la_interval
+    
+    reweighting(mu,m,la,lattice_spacing,num_config,num_lat_points,mass_prime,spring_const_prime,lap,corrt,bootstraps)
+    
+for d in range(la_loi):
+    lap=la-(d+1)*la_interval
+    
+    reweighting(mu,m,la,lattice_spacing,num_config,num_lat_points,mass_prime,spring_const_prime,lap,corrt,bootstraps)
 
 
 
-reweighting(mu,m,la,lattice_spacing,num_config,num_lat_points,mass_prime,spring_const_prime,lap,corrt,bootstraps)
+
+
+
+
+
+
+
+
