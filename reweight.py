@@ -59,6 +59,7 @@ def reweighting(spring_const,mass,la,lattice_spacing,num_config,num_lat_points,m
     
     ssps=pandas.read_csv('action'+name+'.txt', delim_whitespace = True)
     energies=[]
+    x4s=[]
     essp=[]
 
     for g in range(num_bins):
@@ -74,12 +75,14 @@ def reweighting(spring_const,mass,la,lattice_spacing,num_config,num_lat_points,m
             for h in range(points):
                 
                 sum1=sum1+ ((eval(data[h + (j + g*bin_size)*points]))**2)*np.exp(t1 + t2 + t3)
+                sum3=sum3+ ((eval(data[h + (j + g*bin_size)*points]))**4)*np.exp(t1 + t2 + t3)
         
         energies=np.append(energies, sum1/(points*bin_size)) ####not actually the energies
+        x4s=np.append(x4s, sum3/(points*bin_size))
         essp=np.append(essp,sum2/bin_size)
     
     ####Bootstrap errors and bootstrap estimate
-    #### numerator
+    #### numerator x2
     boot_ests=[]
     for i in range(bootstraps):
         
@@ -93,13 +96,35 @@ def reweighting(spring_const,mass,la,lattice_spacing,num_config,num_lat_points,m
     for i in boot_ests:
         sum1=sum1+i
         
-    boot_av_num=sum1/bootstraps
+    boot_av_num_x2=sum1/bootstraps
     sum1=0
     for i in boot_ests:
-        sum1=sum1+(i-boot_av_num)**2
+        sum1=sum1+(i-boot_av_num_x2)**2
         
-    std_num=((1/bootstraps)*sum1)**0.5
-    #### denominator
+    std_num_x2=((1/bootstraps)*sum1)**0.5
+    
+    ##### numerator x4
+    boot_ests=[]
+    for i in range(bootstraps):
+        
+        random_sample=np.random.choice(x4s,num_bins)
+        sum1=0
+        for j in random_sample:
+            sum1=sum1+j
+        sum1=sum1/num_bins
+        boot_ests=np.append(boot_ests,sum1)
+    sum1=0    
+    for i in boot_ests:
+        sum1=sum1+i
+        
+    boot_av_num_x4=sum1/bootstraps
+    sum1=0
+    for i in boot_ests:
+        sum1=sum1+(i-boot_av_num_x4)**2
+        
+    std_num_x4=((1/bootstraps)*sum1)**0.5
+    
+    #### denominator x2
     boot_ests=[]
     for i in range(bootstraps):
         
@@ -120,8 +145,13 @@ def reweighting(spring_const,mass,la,lattice_spacing,num_config,num_lat_points,m
         
     std_dnm=((1/bootstraps)*sum1)**0.5 
         
-    energy=(mup)*(boot_av_num/boot_av_dnm)
-    std=abs(energy)*((std_num/boot_av_num)**2 + (std_dnm/boot_av_dnm)**2)**0.5
+    t1=(mup)*(boot_av_num_x2/boot_av_dnm)
+    t2=(3*lap)*(boot_av_num_x4/boot_av_dnm)
+    stdt1=abs(t1)*((std_num_x2/boot_av_num_x2)**2 + (std_dnm/boot_av_dnm)**2)**0.5
+    stdt2=abs(t2)*((std_num_x4/boot_av_num_x4)**2 + (std_dnm/boot_av_dnm)**2)**0.5
+    
+    energy = t1 + t2
+    std = stdt1 + stdt2
     
     print('reweighted energy', energy)
     print('uncertainty', std)
